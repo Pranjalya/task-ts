@@ -1,0 +1,42 @@
+
+name: JHU-data-update
+
+# Controls when the action will run. 
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  # This workflow contains a single job called "build"
+  crawl:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Runs a single command using the runners shell
+      - name: Install requirements for crawling
+        run: pip install -r ./corona_ts/data_utils/jhu_requirements.txt
+
+      # Runs a set of commands using the runners shell
+      - name: Get data
+        run: python ./corona_ts/data_utils/jhu_data_crawler.py ./data
+        
+      - name: Commit files # transfer the new html files back into the repository
+        run: |
+          git config --local user.name "Pranjalya"
+          git add ./docs
+          git commit -m "JHU data updated"
+    
+      - name: Push changes # push the output folder to your repo
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          force: true
+
